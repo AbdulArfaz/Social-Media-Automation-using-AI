@@ -107,7 +107,7 @@ const AIComposer = () => {
             <button
               disabled={loading}
               onClick={handleGenerate}
-              className="w-full mt-4 py-4 px-6 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold shadow-xl shadow-blue-950/40 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full mt-4 py-4 px-6 rounded-2xl bg-linear-to-r from-blue-400 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 text-white font-semibold shadow-xl shadow-blue-950/40 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <>
