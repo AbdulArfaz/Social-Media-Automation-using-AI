@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import userRouter from "./routes/user.routes.js";
+import socialAuthRouter from "./routes/socialAuth.routes.js";
 
 const app = express();
 
@@ -8,6 +10,9 @@ app.use(cors()
 );
 app.use(express.json());
 app.use(cookieParser());
+
+app.use("/api/users", userRouter);
+app.use("/api/oauth", socialAuthRouter)
 
 app.get("/", (req, res) => {
   res.send("Server is working");
