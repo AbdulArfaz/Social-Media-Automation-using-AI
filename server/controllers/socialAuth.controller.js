@@ -127,7 +127,7 @@ export const syncAccounts = asyncHandler(async (req, res) => {
             continue;
         }
 
-        const account = await Account.findOneAndUpdate(
+        const account = await Accounts.findOneAndUpdate(
             { zernioAccountId: zid },
             {
                 user: req.user._id,
