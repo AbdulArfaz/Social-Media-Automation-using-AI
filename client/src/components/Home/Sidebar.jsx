@@ -6,18 +6,28 @@ import {
   UsersIcon,
   Wand2Icon,
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import api from "../../api/axios";
+import { toast } from 'sonner'
+import { useAuth } from "../../context/AuthContext";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
-  const { logout, user } = {
-    logout: () => {
-      window.location.href = "/";
-    },
-    user: { name: "Arfaz das", email: "a@gmail.com" },
-  };
+  const { logout, user } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
 
-  const location = useLocation();
-
+  const handleLogout = async () => {
+    try {
+          await api.post('/api/users/logout')
+          logout()
+          toast.success('Logged out successfully')
+          navigate('/login')
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to Log out'
+      toast.error(errorMessage)      
+    }
+  }
+      
   const navItems = [
     { name: "Dashboard", icon: LayoutDashboardIcon, path: "/dashboard" },
     { name: "Accounts", icon: UsersIcon, path: "/accounts" },
@@ -78,7 +88,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         })}
       </nav>
 
-      {/* User Footer Section */}
+     
       <div className="p-4 border-t border-purple-500/20 m-3 rounded-2xl bg-purple-900/30 backdrop-blur-sm border border-purple-500/20 flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-linear-to-tr from-purple-500 to-indigo-400 flex items-center justify-center font-bold text-white text-sm shadow-md shrink-0">
@@ -95,7 +105,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl bg-purple-800/60 hover:bg-purple-700 text-white text-xs font-medium transition border border-purple-500/40 active:scale-95"
         >
           <LogOutIcon className="size-4" />

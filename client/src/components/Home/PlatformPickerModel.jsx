@@ -1,7 +1,7 @@
 import {
   CheckCircleIcon,
   PlusCircleIcon,
-  ExternalLinkIcon,
+  Loader2Icon,
   XIcon,
 } from "lucide-react";
 import { PLATFORMS } from "../../assets/assets";

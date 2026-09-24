@@ -6,56 +6,39 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 //helper to ensure user has zernio profile
-export const getOrCreateZernioProfile = asyncHandler(async (req, res) => {
-  const user = req.user;
+export const getOrCreateZernioProfile = async (user) => {
+    // 1. Return cached profile ID if it already exists on the user document
+    if (user.zernioProfileId) {
+        return user.zernioProfileId;
+    }
 
-  const result = await zernio.profiles.listProfiles();
-  const data = result.data;
-  const profiles = Array.isArray(data)
-    ? data
-    : data?.profiles || data?.data || [];
+    // 2. Check if a profile already exists in Zernio
+    const result = await zernio.profiles.listProfiles();
+    const data = result.data;
+    const profiles = Array.isArray(data) ? data : data?.profiles || data?.data || [];
 
-  if (profiles.length > 0) {
-    const pid = profiles[0]._id || profiles[0].id;
+    if (profiles.length > 0) {
+        const pid = profiles[0]._id || profiles[0].id;
+        await User.findByIdAndUpdate(user._id, { zernioProfileId: pid });
+        return pid; // Returns the clean string ID directly
+    }
+
+    // 3. Otherwise, create a new profile in Zernio
+    const createResult = await zernio.profiles.createProfile({
+        body: { name: `${user.name || user.email}'s workspace` },
+    });
+    
+    const created = createResult.data?.profile || createResult.data;
+    const pid = created?._id || created?.id;
+
+    if (!pid) {
+        throw new ApiError(500, "Failed to create new Zernio profile - no ID returned");
+    }
+
+    // Save the new profile ID to the user document and return it
     await User.findByIdAndUpdate(user._id, { zernioProfileId: pid });
-
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          { zernioProfileId: pid },
-          "Zernio profile retrieved successfully"
-        )
-      );
-  }
-  const createResult = await zernio.profiles.createProfile({
-    body: { name: `${user.name || user.email}'s workspace` },
-  });
-  const created = createResult.data?.profile || createResult.data;
-
-  const pid = created?._id || created?.id;
-  if (!pid) {
-    throw new ApiError(
-      500,
-      "Failed to create new zernio profile - no ID returned"
-    );
-  }
-
-  await User.findByIdAndUpdate(user._id, { zernioProfileId: pid });
-
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(
-        201,
-        { zernioProfileId: pid },
-        "Zernio profile created successfully"
-      )
-    );
-});
-
-
+    return pid;
+};
 
 //generate OAuth authorization URL
 
