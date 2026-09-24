@@ -18,8 +18,8 @@ const postSchema = new Schema(
       type: String,
       enum: ["image", "video"],
     },
-    platform: {
-      type: String,
+    platforms: {
+      type: [String],
       enum: [
         "twitter",
         "linkedin",
@@ -37,7 +37,7 @@ const postSchema = new Schema(
     status: {
       type: String,
       enum: ["draft", "scheduled", "published", "failed"],
-      default: "scheduled",
+      default: "published",
     },
   },
   { timestamps: true }

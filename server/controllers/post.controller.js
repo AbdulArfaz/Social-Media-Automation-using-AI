@@ -152,7 +152,7 @@ export const getGenerations = asyncHandler(async (req, res) => {
 
 // Get all posts for the authenticated user
 export const getPosts = asyncHandler(async (req, res) => {
-    const posts = await Post.find({ user: req.user._id });
+    const posts = await Post.find({ user: req.user._id }).sort({createdAt: -1})
 
     return res.status(200).json(
         new ApiResponse(200, posts, "Posts fetched successfully")
@@ -163,17 +163,24 @@ export const getPosts = asyncHandler(async (req, res) => {
 // Schedule post
 // POST /api/posts
 export const schedulePost = asyncHandler(async (req, res) => {
-    const { content, platforms, scheduledFor, status } = req.body;
+     console.log('RAW REQ.BODY RECIEVED:', req.body)
+
+    let rawPlatforms = req.body.platforms || req.body.platform;
 
     // Parse platforms if it comes as a stringified array from FormData
-    let parsedPlatforms = platforms;
-    if (typeof platforms === "string") {
+    let parsedPlatforms = rawPlatforms;
+    if (typeof rawPlatforms === "string") {
         try {
-            parsedPlatforms = JSON.parse(platforms);
+            parsedPlatforms = JSON.parse(rawPlatforms).map(p => typeof p === 'string' ? p : p.name)
         } catch (e) {
-            parsedPlatforms = platforms.split(",");
+            parsedPlatforms = rawPlatforms.split(",")
         }
     }
+    if(!Array.isArray(parsedPlatforms) && parsedPlatforms){
+        parsedPlatforms = [parsedPlatforms]
+    }
+
+    const { content, scheduledFor, status } = req.body;
 
     let mediaUrl = req.body.mediaUrl;
     let mediaType = req.body.mediaType;
@@ -197,7 +204,7 @@ export const schedulePost = asyncHandler(async (req, res) => {
         mediaUrl,
         mediaType,
         scheduledFor,
-        status,
+        status: status || 'scheduled',
     });
 
     return res.status(201).json(
