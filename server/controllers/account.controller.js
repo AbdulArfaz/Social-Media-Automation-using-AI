@@ -2,6 +2,7 @@ import { Accounts } from '../models/account.model.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
+import zernio from '@zernio/node';
 
 // get all accounts
 export const getAccounts = asyncHandler(async (req, res) => {
@@ -40,10 +41,13 @@ export const disconnectAccount = asyncHandler(async (req, res) => {
     if (!account) {
         throw new ApiError(404, 'Account not found');
     }
-
-    if (account.zernioAccountId) {
-        await zernio.accounts.deleteAccount({ path: { accountId: account.zernioAccountId } });
-    }
+     try {
+        if(account.zernioAccountId && typeof zernio?.connect?.delete === 'function'){
+            await zernio.connect.delete({path: {accountId: account.zernioAccountId}})
+        }
+     } catch (sdkError) {
+           console.warn('External SDK deletion skipped or failed:', sdkError.message)
+     }
 
     await account.deleteOne();
 
