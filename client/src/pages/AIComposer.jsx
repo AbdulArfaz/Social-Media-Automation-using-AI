@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { dummyGenerationData, PLATFORMS } from "../assets/assets";
+import { PLATFORMS } from "../assets/assets";
+import api from '../api/axios.js';
+import { toast } from 'sonner';
 import {
   ArrowRightIcon,
   CalendarIcon,
@@ -25,25 +27,75 @@ const AIComposer = () => {
   const [scheduling, setScheduling] = useState(false);
 
   const fetchGenerations = async () => {
-    setGenerations(dummyGenerationData);
+   try {
+        const response = await api.get('/api/posts/generations')
+        const postsArray = response.data?.data || response.data;
+        setGenerations(postsArray)
+   } catch (error) {
+         toast.error(error?.response?.data?.message || error.message)
+   }
   };
 
   useEffect(() => {
     fetchGenerations();
   }, []);
 
+  
+
   const handleGenerate = async () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 2000);
+   if(!prompt) {
+    toast.error('Please Enter Prompt')
+    return;
+   }
+   setLoading(true)
+   try {
+      const response = await api.post('/api/posts/generate', {prompt, tone, generateImage})
+      setGenerations([response.data, ...generations])
+      setActiveScheduler(response.data)
+      toast.success('Content generated')
+   } catch (error) {
+         toast.error(error?.response?.data?.message || error.message)
+   } finally {
+    setLoading(false)
+   }
   };
 
+
+
   const handleSchedule = async () => {
-    setScheduling(true);
-    setTimeout(() => {
-      setScheduling(false);
-    }, 2000);
+     if(!activeScheduler)
+      return;
+    if(selectedPlatforms.length === 0){
+      toast.error('Select atleast one Platform')
+      return;
+    }
+    if(!scheduledDate || !scheduledTime){
+      toast.error('Select date and time')
+      return
+    }
+
+    const scheduledFor = new Date(`${scheduledDate}T${scheduledTime}`).toISOString()
+    setScheduling(true)
+
+    try {
+          await api.post('/api/posts', {
+            content: activeScheduler.content,
+            mediaUrl: activeScheduler.mediaUrl,
+            mediaType: activeScheduler.mediaType,
+            platforms: selectedPlatforms,
+            scheduledFor,
+            status: 'scheduled'
+          })
+          toast.success('Ai Post scheduled')
+          setActiveScheduler(null)
+          setScheduledDate('')
+          setScheduledTime('')
+          setSelectedPlatforms([])
+        } catch (error) {
+            toast.error(error?.response?.data?.message || 'Failed to Schedule')
+        } finally {
+          setScheduling(false)
+        }
   };
 
   const tones = ["Professional", "Creative", "Funny", "Minimalist", "Excited"];
@@ -141,9 +193,9 @@ const AIComposer = () => {
 
           {generations.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {generations.map((gen) => (
+              {generations.map((gen, index) => (
                 <div
-                  key={gen._id}
+                  key={gen._id || index}
                   className="bg-white/4 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex flex-col justify-between space-y-4 hover:border-white/20 transition-all shadow-xl group"
                 >
                   <div className="space-y-3">

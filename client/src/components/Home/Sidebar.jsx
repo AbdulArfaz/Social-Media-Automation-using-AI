@@ -19,12 +19,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const handleLogout = async () => {
     try {
           await api.post('/api/users/logout')
-          logout()
-          toast.success('Logged out successfully')
-          navigate('/login')
+
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to Log out'
       toast.error(errorMessage)      
+    } finally{
+          logout()
+          toast.success('Logged out successfully')
+          navigate('/login')
     }
   }
       
