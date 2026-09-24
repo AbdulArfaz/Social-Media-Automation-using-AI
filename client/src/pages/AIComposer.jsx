@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PLATFORMS } from "../assets/assets";
-import api from '../api/axios.js';
-import { toast } from 'sonner';
+import api from "../api/axios.js";
+import { toast } from "sonner";
 import {
   ArrowRightIcon,
   CalendarIcon,
@@ -27,75 +27,84 @@ const AIComposer = () => {
   const [scheduling, setScheduling] = useState(false);
 
   const fetchGenerations = async () => {
-   try {
-        const response = await api.get('/api/posts/generations')
-        const postsArray = response.data?.data || response.data;
-        setGenerations(postsArray)
-   } catch (error) {
-         toast.error(error?.response?.data?.message || error.message)
-   }
+    try {
+      const response = await api.get("/api/posts/generations");
+      const postsArray = response.data?.data || response.data;
+      setGenerations(postsArray);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message);
+    }
   };
 
   useEffect(() => {
     fetchGenerations();
   }, []);
 
-  
-
   const handleGenerate = async () => {
-   if(!prompt) {
-    toast.error('Please Enter Prompt')
-    return;
-   }
-   setLoading(true)
-   try {
-      const response = await api.post('/api/posts/generate', {prompt, tone, generateImage})
-      setGenerations([response.data, ...generations])
-      setActiveScheduler(response.data)
-      toast.success('Content generated')
-   } catch (error) {
-         toast.error(error?.response?.data?.message || error.message)
-   } finally {
-    setLoading(false)
-   }
+    if (!prompt) {
+      toast.error("Please Enter Prompt");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await api.post("/api/posts/generate", {
+        prompt,
+        tone,
+        generateImage,
+      });
+      setGenerations([response.data, ...generations]);
+      setActiveScheduler(response.data);
+      toast.success("Content generated");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-
-
   const handleSchedule = async () => {
-     if(!activeScheduler)
-      return;
-    if(selectedPlatforms.length === 0){
-      toast.error('Select atleast one Platform')
+    if (!activeScheduler) return;
+    if (selectedPlatforms.length === 0) {
+      toast.error("Select atleast one Platform");
       return;
     }
-    if(!scheduledDate || !scheduledTime){
-      toast.error('Select date and time')
-      return
+    if (!scheduledDate || !scheduledTime) {
+      toast.error("Select date and time");
+      return;
     }
 
-    const scheduledFor = new Date(`${scheduledDate}T${scheduledTime}`).toISOString()
-    setScheduling(true)
+    const scheduledFor = new Date(
+      `${scheduledDate}T${scheduledTime}`
+    ).toISOString();
+    setScheduling(true);
+
+    const formData = new FormData();
+    formData.append("content", activeScheduler.content);
+    formData.append("scheduledFor", scheduledFor);
+    formData.append("status", "scheduled");
+
+    // Send platforms as a JSON string so your backend's parser (lines 173-177) can read it
+    formData.append("platforms", JSON.stringify(selectedPlatforms));
+
+    // If there is an optional media file attached, append it too
+    if (activeScheduler.mediaFile) {
+      formData.append("media", activeScheduler.mediaFile);
+    }
 
     try {
-          await api.post('/api/posts', {
-            content: activeScheduler.content,
-            mediaUrl: activeScheduler.mediaUrl,
-            mediaType: activeScheduler.mediaType,
-            platforms: selectedPlatforms,
-            scheduledFor,
-            status: 'scheduled'
-          })
-          toast.success('Ai Post scheduled')
-          setActiveScheduler(null)
-          setScheduledDate('')
-          setScheduledTime('')
-          setSelectedPlatforms([])
-        } catch (error) {
-            toast.error(error?.response?.data?.message || 'Failed to Schedule')
-        } finally {
-          setScheduling(false)
-        }
+      await api.post("/api/posts", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success("Ai Post scheduled");
+      setActiveScheduler(null);
+      setScheduledDate("");
+      setScheduledTime("");
+      setSelectedPlatforms([]);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to Schedule");
+    } finally {
+      setScheduling(false);
+    }
   };
 
   const tones = ["Professional", "Creative", "Funny", "Minimalist", "Excited"];
@@ -288,7 +297,7 @@ const AIComposer = () => {
                           setSelectedPlatforms((prev) =>
                             prev.includes(p.id)
                               ? prev.filter((x) => x !== p.id)
-                              : [...prev, p.id],
+                              : [...prev, p.id]
                           );
                         }}
                         style={{
