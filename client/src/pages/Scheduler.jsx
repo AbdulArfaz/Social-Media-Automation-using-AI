@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-import { dummyPostsData, PLATFORMS } from "../assets/assets";
-import {
-  ArrowRightIcon,
-  CalculatorIcon,
-  CalendarDaysIcon,
-  ClockIcon,
-  SendIcon,
-  XIcon,
-} from "lucide-react";
+import { PLATFORMS } from "../assets/assets";
 import { toast } from 'sonner'
 import api from "../api/axios.js";
 
@@ -75,7 +67,7 @@ const Scheduler = () => {
     setLoading(true)
 
     try {
-      await api.post('/api/posts', formData)
+      await api.post('/api/posts', formData, {headers: {'Content-Type': 'multipart/form-data'}})
       toast.success('Post Scheduled')
       setContent('')
       setScheduledDate('')

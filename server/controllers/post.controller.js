@@ -65,13 +65,14 @@ export const generatePost = asyncHandler(async (req, res) => {
     const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: `Generate a social media post based on this prompt: "${prompt}".
         Tone: ${tone}.
         Include relevant hashtags.
         Format the response as JSON with "content" and "imagePrompt" fields.
         The "imagePrompt" should be a highly descriptive prompt for an image generator that complements the post.`
     });
+
 
     let content = "";
     let imagePrompt = prompt;
@@ -163,7 +164,6 @@ export const getPosts = asyncHandler(async (req, res) => {
 // Schedule post
 // POST /api/posts
 export const schedulePost = asyncHandler(async (req, res) => {
-     console.log('RAW REQ.BODY RECIEVED:', req.body)
 
     let rawPlatforms = req.body.platforms || req.body.platform;
 
