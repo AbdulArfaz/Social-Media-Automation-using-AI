@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
-import { Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Menu as MenuIcon } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 const pageTitles = {
   "/dashboard": "Dashboard",
@@ -11,9 +12,22 @@ const pageTitles = {
 };
 
 const Layout = () => {
+   const {isAuthenticated, isLoading} = useAuth()
+
   const location = useLocation();
   const title = pageTitles[location.pathname] || "SocialAI";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  if(isLoading){
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-100">
+          <div className="size-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+  if(!isAuthenticated){
+    return <Navigate to='/login' replace />
+  }
 
   return (
     <div className="flex h-screen bg-linear-to-br from-slate-950 via-teal-950 to-emerald-950 text-slate-100 overflow-hidden font-sans">

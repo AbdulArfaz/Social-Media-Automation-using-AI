@@ -6,10 +6,12 @@ import Dashboard  from './pages/Dashboard.jsx'
 import Accounts from './pages/Accounts.jsx'
 import Scheduler from './pages/Scheduler.jsx'
 import AIComposer from './pages/AIComposer.jsx'
+import { Toaster } from 'sonner'
 
 export default function App() {
     return (
         <>
+           <Toaster position='top-right' richColors />
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />

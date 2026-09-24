@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRightIcon, Menu, X } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user } = { user: false };
+  const { user } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-slate-950 border-b border-slate-800 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between relative">
-        {/* Logo */}
         <Link
           to="/"
           onClick={() => window.scrollTo(0, 0)}
@@ -23,7 +23,6 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
           <a href="#features" className="hover:text-white transition-colors">
             Features
@@ -39,7 +38,6 @@ export default function Navbar() {
           </a>
         </div>
 
-        {/* Desktop Action Buttons */}
         <div className="hidden md:flex items-center gap-4">
           {user ? (
             <Link
@@ -68,7 +66,6 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
         <div className="flex md:hidden items-center">
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -80,7 +77,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Menu Dropdown - Absolute positioned cleanly inside the navbar block */}
         {isOpen && (
           <div className="md:hidden absolute top-16 left-0 w-full bg-slate-950 border-b border-slate-800 px-6 py-6 flex flex-col gap-4 shadow-2xl">
             <a

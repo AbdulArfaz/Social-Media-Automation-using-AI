@@ -7,11 +7,8 @@ import {
   ActivityIcon,
   SendIcon,
 } from "lucide-react";
-import {
-  dummyPostsData,
-  dummyAccountsData,
-  dummyActivityData,
-} from "../assets/assets";
+import api from "../api/axios";
+
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -31,9 +28,15 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const posts = dummyPostsData || [];
-        const accounts = dummyAccountsData || [];
-        const activitiesData = dummyActivityData || [];
+             const [postsRes, accountsRes, activityRes] = await Promise.all([
+                api.get("/api/post"), 
+                api.get("/api/accounts"), 
+                api.get("/api/activity")
+            ]);
+
+            const posts = postsRes.data.data || postsRes.data; 
+            const accounts = accountsRes.data.data || accountsRes.data;
+            const activitiesData = activityRes.data.data || activityRes.data;
         setStats({
           scheduled: posts.filter((p) => p.status === "scheduled").length,
           published: posts.filter((p) => p.status === "published").length,

@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MailIcon, LockIcon, ArrowRightIcon, User2Icon } from "lucide-react";
 import socialmedia from "../assets/socialmedia.jpg";
+import { useAuth } from '../context/AuthContext.jsx';
+import api from "../api/axios.js";
+import { toast } from 'sonner'
 
 export default function Login() {
   const [loginState, setLoginState] = useState(true);
@@ -10,15 +13,32 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const {login, user} = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/dashboard");
-    }, 1000);
+    try {
+      const response = await api.post(`/api/users/${loginState ? 'login' : 'register'}`,
+        {name, email,password})
+
+       const userData = response.data.data.user;
+
+      login(userData)
+      navigate('/dashboard')
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Something went wrong during authentication'
+      toast.error(errorMessage)
+    } finally {
+      setLoading(false)
+    }
   };
+
+  useEffect(()=>{
+   if(user){
+    navigate('/dashboard')
+   }
+  },[user])
 
   return (
     <div
