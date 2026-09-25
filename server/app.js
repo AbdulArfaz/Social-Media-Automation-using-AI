@@ -11,7 +11,7 @@ import { initScheduler } from "./services/scheduler.services.js";
 const app = express();
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: 'https://social-media-automation-using-ai.onrender.com',
     credentials: true
 })
 );
