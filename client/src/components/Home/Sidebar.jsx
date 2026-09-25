@@ -41,7 +41,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     <div
       className={`fixed inset-y-0 left-0 z-50 w-64 bg-indigo-950/95 backdrop-blur-xl border-r border-purple-600/40 flex flex-col h-full transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
     >
-      {/* Logo Section */}
+      
       <div className="p-6 pb-4 border-b border-purple-600/30">
         <div className="text-xl font-bold tracking-tight text-white flex items-center gap-2.5">
           <img
@@ -53,14 +53,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
       </div>
 
-      {/* Nav Section Label */}
       <div className="px-6 pt-6 pb-2">
         <span className="text-xs font-semibold uppercase tracking-wider text-purple-200/80">
           Menu
         </span>
       </div>
 
-      {/* Nav Links */}
+     
       <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;

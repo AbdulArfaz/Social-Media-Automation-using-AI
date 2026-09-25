@@ -52,8 +52,8 @@ const AIComposer = () => {
         tone,
         generateImage,
       });
-      setGenerations([response.data, ...generations]);
-      setActiveScheduler(response.data);
+      setGenerations([response.data.data, ...generations]);
+      setActiveScheduler(response.data.data);
       toast.success("Content generated");
     } catch (error) {
       toast.error(error?.response?.data?.message || error.message);
@@ -82,13 +82,10 @@ const AIComposer = () => {
     formData.append("content", activeScheduler.content);
     formData.append("scheduledFor", scheduledFor);
     formData.append("status", "scheduled");
-
-    // Send platforms as a JSON string so your backend's parser (lines 173-177) can read it
     formData.append("platforms", JSON.stringify(selectedPlatforms));
 
-    // If there is an optional media file attached, append it too
     if (activeScheduler.mediaFile) {
-      formData.append("media", activeScheduler.mediaFile);
+      formData.append("mediaUrl", activeScheduler.mediaFile);
     }
 
     try {
@@ -259,7 +256,7 @@ const AIComposer = () => {
 
         {activeScheduler && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="bg-[#0b1329] border border-white/15 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-[#0b1329] border border-white/15 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white">
                   Schedule Generation
@@ -281,6 +278,15 @@ const AIComposer = () => {
                   {activeScheduler.content}
                 </p>
               </div>
+              {activeScheduler.mediaUrl && (
+                <div className="overflow-hidden rounded-2xl border border-white/10 aspect-video mt-3">
+                  <img
+                    src={activeScheduler.mediaUrl}
+                    alt="Generation preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
 
               <div className="space-y-3">
                 <label className="text-sm font-semibold text-white/50">

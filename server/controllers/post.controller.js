@@ -1,58 +1,22 @@
 import { GoogleGenAI } from "@google/genai";
 import axios from "axios";
 import uploadOnCloudinary from "../db/cloudinary.js";
+import { v2 as cloudinary } from "cloudinary";
 import { Generation } from "../models/generation.model.js";
 import { Post } from "../models/post.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import Replicate from "replicate";
+import { upload } from "../middlewares/multer.middleware.js";
 
-//helper to poll leonardo.ai
-const pollLeonardoJob = async (generationId, apiKey) => {
-  const maxRetries = 20;
-  const delay = 5000;
+const replicate = new Replicate();
 
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const response = await axios.get(
-        `https://cloud.leonardo.ai/api/rest/v2/generations/${generationId}`,
-        {
-          headers: {
-            accept: "application/json",
-            authorization: `Bearer ${apiKey}`,
-          },
-        }
-      );
 
-      const generation = response.data?.generations_by_pk || response.data?.generationJob;
-
-      if (generation.status === "COMPLETE") {
-        if (
-          generation.generated_images &&
-          generation.generated_images.length > 0
-        ) {
-          return generation.generated_images[0].url;
-        }
-        throw new Error("Generation complete but no image found.");
-      }
-
-      if (generation.status === "FAILED") {
-        throw new Error("Leonardo.ai generation failed");
-      }
-    } catch (error) {
-      console.error("Polling error:", error?.response?.data || error.message);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-
-  throw new Error("Leonardo.ai generation timed out after maximum retries");
-};
 
 export const generatePost = asyncHandler(async (req, res) => {
   const { prompt, tone, generateImage } = req.body;
 
-  // 1. Validate API Key
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new ApiError(
@@ -61,12 +25,10 @@ export const generatePost = asyncHandler(async (req, res) => {
     );
   }
 
-  // 2. Validate user input
   if (!prompt) {
     throw new ApiError(400, "Prompt is required.");
   }
 
-  // 3. Initialize the Google Gen AI SDK
   const ai = new GoogleGenAI({ apiKey });
 
   const response = await ai.models.generateContent({
@@ -96,43 +58,37 @@ export const generatePost = asyncHandler(async (req, res) => {
   let mediaUrl = "";
 
   if (generateImage) {
-    const leonardoKey = process.env.LEONARDO_API_KEY;
-    if (!leonardoKey) {
-      throw new ApiError(400, "Leonardo API Key is missing.");
+    const replicateToken = process.env.REPLICATE_API_TOKEN;
+    if (!replicateToken) {
+      throw new ApiError(
+        400,
+        "Replicate API Token is missing. Please add it to your server/.env file."
+      );
     }
 
-     const leoResponse = await axios.post('https://cloud.leonardo.ai/api/rest/v2/generations', {
-            public: false,
-            model: "seedream-4.5",
-            parameters: {
-                quality: "LOW",
-                prompt: imagePrompt,
-                quantity: 1,
-                width: 1024,
-                height: 1024,
-                prompt_enhance: "OFF"
-            }
-        },
-      {
-        headers: {
-          accept: "application/json",
-          authorization: `Bearer ${leonardoKey}`,
-          "content-type": "application/json",
-        },
-      }
-    );
-    console.log("Leonardo Response Data:", JSON.stringify(leoResponse.data, null, 2));
+    const output = await replicate.run("black-forest-labs/flux-schnell", {
+      input: {
+        prompt: imagePrompt || prompt,
+        go_fast: true,
+      },
+    });
 
-    const generationId = leoResponse.data?.sdGenerationJob?.generationId || leoResponse.data?.generationId || leoResponse.data?.id;
-    if(!generationId){
-        throw new Error('Failed to obtain generation Id from leonardo AI')
-    }
-    const tempUrl = await pollLeonardoJob(generationId, leonardoKey);
+    cloudinary.config({
+      cloud_name: String(process.env.CLOUDINARY_CLOUD_NAME).trim(),
+      api_key: String(process.env.CLOUDINARY_API_KEY).trim(),
+      api_secret: String(process.env.CLOUDINARY_API_SECRET).trim(),
+      secure: true,
+    });
 
-    // Upload remote URL directly using Cloudinary SDK
-    const uploadResult = await uploadOnCloudinary.uploader.upload(tempUrl, {
+    const rawOutput = Array.isArray(output) ? output[0] : output;
+    const urlObj =
+      typeof rawOutput.url === "function" ? rawOutput.url() : String(rawOutput);
+    const tempUrl = urlObj.href ? urlObj.href : urlObj.toString();
+
+    const uploadResult = await cloudinary.uploader.upload(tempUrl, {
       folder: "ai-generations",
     });
+
     mediaUrl = uploadResult.secure_url;
   }
 
@@ -153,7 +109,6 @@ export const generatePost = asyncHandler(async (req, res) => {
 
 
 
-// Get all generations for the authenticated user
 export const getGenerations = asyncHandler(async (req, res) => {
   const generations = await Generation.find({ user: req.user._id }).sort({
     createdAt: -1,
@@ -166,7 +121,9 @@ export const getGenerations = asyncHandler(async (req, res) => {
     );
 });
 
-// Get all posts for the authenticated user
+
+
+
 export const getPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find({ user: req.user._id }).sort({ createdAt: -1 });
 
@@ -175,12 +132,14 @@ export const getPosts = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, posts, "Posts fetched successfully"));
 });
 
+
+
+
 // Schedule post
 // POST /api/posts
 export const schedulePost = asyncHandler(async (req, res) => {
   let rawPlatforms = req.body.platforms || req.body.platform;
 
-  // Parse platforms if it comes as a stringified array from FormData
   let parsedPlatforms = rawPlatforms;
   if (typeof rawPlatforms === "string") {
     try {
@@ -201,7 +160,6 @@ export const schedulePost = asyncHandler(async (req, res) => {
   let mediaType = req.body.mediaType;
 
   if (req.file) {
-    // Since multer uses diskStorage, we can use your custom uploadOnCloudinary utility directly!
     const uploadResult = await uploadOnCloudinary(req.file.path);
 
     if (!uploadResult) {
