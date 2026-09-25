@@ -84,8 +84,9 @@ const AIComposer = () => {
     formData.append("status", "scheduled");
     formData.append("platforms", JSON.stringify(selectedPlatforms));
 
-    if (activeScheduler.mediaFile) {
-      formData.append("mediaUrl", activeScheduler.mediaFile);
+    if (activeScheduler.mediaUrl) {
+      formData.append("mediaUrl", activeScheduler.mediaUrl);
+      formData.append("mediaType", activeScheduler.mediaType || "image");
     }
 
     try {
