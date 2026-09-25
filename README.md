@@ -6,7 +6,7 @@ An enterprise-grade, feature-rich social media management and AI content generat
 
 ### 🌐 Live Link
 
-* *Live Application:* [social-media-automation-using-ai-bice.vercel.app](social-media-automation-using-ai-bice.vercel.app)
+* *Live Application:* [https://social-media-automation-using-ai-bice.vercel.app](https://social-media-automation-using-ai-bice.vercel.app)
 
 ---
 
